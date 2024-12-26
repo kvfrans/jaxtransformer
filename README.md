@@ -26,12 +26,13 @@ To train an autoregressive language model:
 ```
 python examples/train_llm.py --train.dataset_name openwebtext --wandb.name LLM-B-OpenWebText --tf.hidden_size 768 --tf.depth 12 --tf.num_heads 12 --tf.mlp_ratio 4
 ```
-### Sanity Checks
-
-See [these wandb reports](https://api.wandb.ai/links/kvfransmit/i9z7mj58) for what to expect during a training run.
 The above scripts train a Base size model. To train an XLarge size model, simply change the config flags to:
 ```
 --tf.hidden_size 1152 --tf.depth 28 --tf.num_heads 16 --tf.mlp_ratio 4
 ```
 
 When training on a single host, simply run the Python commands as described above. The code will automatically work if multiple GPUs/TPUs are present. To train on multiple hosts, run a copy of the Python commands on each host. See [this JAX guide](https://jax.readthedocs.io/en/latest/multi_process.html) for more info.
+
+### Sanity Checks
+
+See [these wandb reports](https://api.wandb.ai/links/kvfransmit/i9z7mj58) for what to expect during a training run.
