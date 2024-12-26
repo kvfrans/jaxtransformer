@@ -21,27 +21,8 @@ def get_flag_dict():
     return flag_dict
 
 
-def default_wandb_config():
-    config = ml_collections.ConfigDict()
-    config.offline = False  # Syncs online or not?
-    config.project = "min-transformer"  # WandB Project Name
-    config.entity = FieldReference(None, field_type=str)  # Which entity to log as (default: your own user)
 
-    group_name = FieldReference(None, field_type=str)  # Group name
-    config.exp_prefix = group_name  # Group name (deprecated, but kept for backwards compatibility)
-    config.group = group_name  # Group name
-
-    experiment_name = FieldReference(None, field_type=str) # Experiment name
-    config.name = experiment_name  # Run name (will be formatted with flags / variant)
-    config.exp_descriptor = experiment_name  # Run name (deprecated, but kept for backwards compatibility)
-    config.run_id = 'None' # For continuing a run
-
-    config.unique_identifier = ""  # Unique identifier for run (will be automatically generated unless provided)
-    config.random_delay = 0  # Random delay for wandb.init (in seconds)
-    return config
-
-
-def setup_wandb(hyperparam_dict, entity=None, project="min-transformer", group=None, name=None,
+def setup_wandb(hyperparam_dict, entity=None, project="jaxtransformer", group=None, name=None,
     unique_identifier="", offline=False, random_delay=0, run_id='None', **additional_init_kwargs):
     if "exp_descriptor" in additional_init_kwargs:
         # Remove deprecated exp_descriptor

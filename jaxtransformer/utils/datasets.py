@@ -3,9 +3,14 @@ import tensorflow as tf
 import numpy as np
 import jax
 
-def get_dataset(dataset_name, batch_size, is_train, max_sequence_length=None, debug_overfit=False):
+# =============================================================================
+# Helper that returns an iterator over data tuples.
+# Returns a tuple of (data, label) where data is a float32 tensor of shape [batch_size, ...]
+# global_batch_size should be the *total* batch size, which will be split among multiple hosts.
+# =============================================================================
+def get_dataset(dataset_name, global_batch_size, is_train, max_sequence_length=None, debug_overfit=False):
     tf.random.set_seed(42 + jax.process_index())
-    print("Loading dataset")
+    batch_size = global_batch_size // jax.process_count()
     if 'imagenet256' in dataset_name:
         def deserialization_fn(data):
             image = data['image']

@@ -54,16 +54,7 @@ def create_sharding(shard_type, train_state_shape=None):
         if len(args) == 1:
             return _shard_data(args[0])
         return jax.tree_map(_shard_data, args)
-
-    # Collect a multi-host array onto the local device.
-    def global_to_local(x):
-        return jax.experimental.multihost_utils.global_array_to_host_local_array(x, mesh, PartitionSpec('devices'))
     
     # The first three are 'Sharding' objects which are pytrees.
     # The last two are helper functions for moving data between devices.
-    return data_sharding, train_state_sharding, no_shard, shard_data, global_to_local
-
-def all_gather(*args):
-    if len(args) == 1:
-        return jax.experimental.multihost_utils.process_allgather(args[0])
-    return jax.tree_map(jax.experimental.multihost_utils.process_allgather, args)
+    return train_state_sharding, no_shard, shard_data

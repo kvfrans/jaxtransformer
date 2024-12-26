@@ -70,12 +70,12 @@ class TransformerBackbone(nn.Module):
     use_causal_masking: bool = False
 
     @nn.compact
-    def __call__(self, x, c):
+    def __call__(self, x, c=None):
         assert len(x.shape) == 3 # Input tokens = (batch, seq_len, channels)
-        assert len(c.shape) == 2 # Conditioning = (batch, channels)
+        assert c is None or len(c.shape) == 2 # Conditioning = (batch, channels)
 
         x = x.astype(global_dtype)
-        c = c.astype(global_dtype)
+        c = c.astype(global_dtype) if c is not None else c
         for _ in range(self.depth):
             x = Block(self.hidden_size, self.num_heads, self.use_conditioning, self.use_causal_masking, self.mlp_ratio)(x, c)
         return x

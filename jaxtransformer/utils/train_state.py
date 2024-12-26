@@ -24,11 +24,10 @@ class TrainState(flax.struct.PyTreeNode):
     use_ema: bool = False
 
     @classmethod
-    def create(cls, model_def, params, rng, tx=None, opt_state=None, **kwargs):
-        if tx is not None and opt_state is None:
-            opt_state = tx.init(params)
-        params_ema = params if kwargs.get("use_ema", False) else None
-
+    def create(cls, rng, model_def, model_input, tx, use_ema=False, **kwargs):
+        params = model_def.init(rng, *model_input)['params']
+        opt_state = tx.init(params)
+        params_ema = params if use_ema else None
         return cls(
             rng=rng, step=1, apply_fn=model_def.apply, model_def=model_def, params=params, params_ema=params_ema,
             tx=tx, opt_state=opt_state, **kwargs,

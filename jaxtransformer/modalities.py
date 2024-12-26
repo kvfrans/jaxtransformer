@@ -3,13 +3,13 @@ import math
 import flax.linen as nn
 import jax.numpy as jnp
 from einops import rearrange
-from transformer import global_dtype, modulate
+from jaxtransformer.transformer import global_dtype, modulate
 
 ################################################################################
 #                                 Input Modules                                #
 ################################################################################
 
-class TimestepEmbedder(nn.Module):
+class TimestepEmbed(nn.Module):
     """ Embeds scalar continuous time into vector representations."""
     hidden_size: int
     frequency_embedding_size: int = 256
@@ -29,7 +29,7 @@ class TimestepEmbedder(nn.Module):
         freqs = jnp.exp( -math.log(max_period) * jnp.arange(start=0, stop=half, dtype=jnp.float32) / half)
         args = t[:, None] * freqs[None]
         embedding = jnp.concatenate([jnp.cos(args), jnp.sin(args)], axis=-1)
-        embedding = embedding.astype(self.tc.dtype) * jnp.sqrt(2) # RMS norm = 1.
+        embedding = embedding.astype(global_dtype) * jnp.sqrt(2) # RMS norm = 1.
         return embedding
 
 
@@ -112,6 +112,8 @@ class PatchOutput(nn.Module):
 
     @nn.compact
     def __call__(self, x, c):
+        batch_size, num_patches, _ = x.shape
+        patch_side = int(num_patches ** 0.5)
         c = nn.silu(c)
         c = nn.Dense(2 * self.hidden_size, kernel_init=nn.initializers.constant(0.0), 
                      bias_init=nn.initializers.constant(0.0), dtype=global_dtype)(c)
@@ -119,6 +121,9 @@ class PatchOutput(nn.Module):
         x = nn.LayerNorm(use_bias=False, use_scale=False, dtype=global_dtype)(x)
         x = modulate(x, shift, scale)
         x = nn.Dense(self.patch_size * self.patch_size * self.channels, dtype=global_dtype)(x)
+        x = jnp.reshape(x, (batch_size, patch_side, patch_side, self.patch_size, self.patch_size, self.channels))
+        x = jnp.einsum('bhwpqc->bhpwqc', x)
+        x = rearrange(x, 'B H P W Q C -> B (H P) (W Q) C', H=patch_side, W=patch_side)
         return x
     
 class ClassifierOutput(nn.Module):
