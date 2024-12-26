@@ -1,6 +1,3 @@
-from localutils.debugger import enable_debug
-enable_debug()
-
 import jax.numpy as jnp
 from absl import app, flags
 from functools import partial
