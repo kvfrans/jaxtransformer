@@ -8,7 +8,7 @@ import jax
 # Returns a tuple of (data, label) where data is a float32 tensor of shape [batch_size, ...]
 # global_batch_size should be the *total* batch size, which will be split among multiple hosts.
 # =============================================================================
-def get_dataset(dataset_name, global_batch_size, is_train, max_sequence_length=None, debug_overfit=False):
+def get_dataset(dataset_name, global_batch_size, is_train, max_sequence_length=None, debug_overfit=False, data_dir=None):
     tf.random.set_seed(42 + jax.process_index())
     batch_size = global_batch_size // jax.process_count()
     if 'imagenet256' in dataset_name:
@@ -37,7 +37,7 @@ def get_dataset(dataset_name, global_batch_size, is_train, max_sequence_length=N
             return image, data['label']
 
         split = tfds.split_for_jax_process('train' if is_train else 'validation', drop_remainder=True)
-        dataset = tfds.load('imagenet2012', split=split)
+        dataset = tfds.load('imagenet2012', split=split, data_dir=data_dir)
         dataset = dataset.map(deserialization_fn, num_parallel_calls=tf.data.AUTOTUNE, deterministic=True)
         dataset = dataset.shuffle(10000, seed=42, reshuffle_each_iteration=True)
         dataset = dataset.repeat()
@@ -61,7 +61,10 @@ def get_dataset(dataset_name, global_batch_size, is_train, max_sequence_length=N
 
         # split = tfds.split_for_jax_process('train' if is_train else 'validation', drop_remainder=True)
         split = tfds.split_for_jax_process('train[:95%]' if is_train else 'train[95%:]', drop_remainder=True)
-        dataset = tfds.load('celebahq256', split=split)
+        if '64' in dataset_name:
+            dataset = tfds.load('celebahq64', split=split, data_dir=data_dir)
+        else:
+            dataset = tfds.load('celebahq256', split=split, data_dir=data_dir)
         dataset = dataset.map(deserialization_fn, num_parallel_calls=tf.data.AUTOTUNE, deterministic=True)
         dataset = dataset.shuffle(20000, seed=42+jax.process_index(), reshuffle_each_iteration=True)
         dataset = dataset.repeat()
@@ -82,7 +85,7 @@ def get_dataset(dataset_name, global_batch_size, is_train, max_sequence_length=N
             return image, 0 # No label
 
         split = tfds.split_for_jax_process('church-train' if is_train else 'church-test', drop_remainder=True)
-        dataset = tfds.load('lsunc', split=split)
+        dataset = tfds.load('lsunc', split=split, data_dir=data_dir)
         dataset = dataset.map(deserialization_fn, num_parallel_calls=tf.data.AUTOTUNE, deterministic=True)
         dataset = dataset.shuffle(10000, seed=42, reshuffle_each_iteration=True)
         dataset = dataset.repeat()
@@ -100,7 +103,7 @@ def get_dataset(dataset_name, global_batch_size, is_train, max_sequence_length=N
             return text
 
         split = tfds.split_for_jax_process('train[:95%]' if is_train else 'train[95%:]', drop_remainder=True)
-        dataset = tfds.load('openwebtext', split=split)
+        dataset = tfds.load('openwebtext', split=split, data_dir=data_dir)
         if debug_overfit:
             dataset = dataset.take(16)
         dataset = dataset.map(deserialization_fn, num_parallel_calls=tf.data.AUTOTUNE, deterministic=True)
