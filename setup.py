@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='jaxtransformer',
@@ -8,5 +8,5 @@ setup(
     author='Kevin Frans',
     author_email='kevinfrans2@gmail.com',
     license='MIT',
-    packages=['jaxtransformer'],
+    packages=find_packages(),
 )
