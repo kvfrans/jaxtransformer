@@ -67,12 +67,13 @@ class Checkpoint:
             with tf.io.gfile.GFile(filename, 'wb') as f:
                 f.write(content)
         else:
-            os.makedirs(filename, exist_ok=True)
+            os.makedirs(parent_dir(filename), exist_ok=True)
             tmp = parent_dir(filename) + '/' + name(filename) + '.tmp'
+            print('Saving to', tmp)
             with open(tmp, 'wb') as f:
                 f.write(content)
+            print('Moving to', filename)
             shutil.move(tmp, filename)
-        print('Wrote checkpoint.')
 
     def load_as_dict(self, filename=None):
         assert self._filename or filename

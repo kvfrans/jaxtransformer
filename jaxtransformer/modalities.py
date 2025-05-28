@@ -105,21 +105,14 @@ def get_2d_sincos_pos_embed(rng, embed_dim, length):
 ################################################################################
     
 class PatchOutput(nn.Module):
-    """ The final layer of a diffusion model. """
+    """ Final layer for image-output models. """
     patch_size: int
     channels: int
-    hidden_size: int
 
     @nn.compact
-    def __call__(self, x, c):
+    def __call__(self, x):
         batch_size, num_patches, _ = x.shape
         patch_side = int(num_patches ** 0.5)
-        c = nn.silu(c)
-        c = nn.Dense(2 * self.hidden_size, kernel_init=nn.initializers.constant(0.0), 
-                     bias_init=nn.initializers.constant(0.0), dtype=global_dtype)(c)
-        shift, scale = jnp.split(c, 2, axis=-1)
-        x = nn.LayerNorm(use_bias=False, use_scale=False, dtype=global_dtype)(x)
-        x = modulate(x, shift, scale)
         x = nn.Dense(self.patch_size * self.patch_size * self.channels, dtype=global_dtype)(x)
         x = jnp.reshape(x, (batch_size, patch_side, patch_side, self.patch_size, self.patch_size, self.channels))
         x = jnp.einsum('bhwpqc->bhpwqc', x)
